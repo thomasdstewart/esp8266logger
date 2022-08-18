@@ -169,8 +169,10 @@ Deep sleeping
 
 Then later you can retrieve that same data from the pushgateway with:
 ```
-$ curl -s https://pushgateway.example.org/metrics | grep ^temperature01
-temperature01{instance="",job="esp8266logger"} 28.4
+$ curl -s https://pushgateway.example.org/metrics | grep ^esp8266logger
+esp8266logger_humidity_ratio{instance="",job="esp8266logger",name="01"} 0.54
+esp8266logger_temperature_celsius{instance="",job="esp8266logger",name="01"} 25.86
+
 ```
 
 # Prometheus Setup
