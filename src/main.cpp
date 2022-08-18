@@ -21,7 +21,6 @@
 #include <ESP8266HTTPClient.h>
 #include <WiFiClientSecureBearSSL.h>
 #include <AHT10.h>
-#include "config-sample.h"
 #include "config.h"
 
 const char *ssid = SSID;
