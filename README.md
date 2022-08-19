@@ -29,6 +29,9 @@ The really nice thing about this setup is that you can solder the 3 pin TO-92 pa
  * https://github.com/milesburton/Arduino-Temperature-Control-Library/issues/159
  * https://datasheets.maximintegrated.com/en/ds/DS18B20.pdf
  * https://wp.josh.com/2014/06/23/no-external-pull-up-needed-for-ds18b20-temp-sensor/
+ * https://hobbycomponents.com/development-boards/864-wemos-d1-mini-pro-esp8266-development-board
+ * http://www.esp8266learning.com/wemos-mini-ds18b20-temperature-sensor-example.php
+ * https://blog.robertelder.org/ds18b20-raspberry-pi-setup-pullup/
 
 ## Build
 The AHT10 is a I2C bus chip, which needs GND, Vcc, SDA (serial data line) and SCL (serial clock line). There are connected to GND, 3V3, D2 and D1. I think D1 and D2 are GPIO that work with I2C, I didn't try in other GPIO's and the libraries didn't see to specify a way. AHT10 references:
@@ -84,13 +87,19 @@ $ . .venv/bin/activate
 $
 ```
 
-The sketch needs the Wi-Fi and Prometheus Pushgateway URL settings set in the config.h header:
+The sketch needs the Wi-Fi and Prometheus Pushgateway URL settings set in the config.h and certs header and example called config-sample.h exists as a template
 ```
 $ cp include/config-sample.h include/config.h
 $ vi include/config.h
 ```
 
-Note: username and password for basic auth can be used in the URL and if https is used the https fingerprint need to be updated via URL_FP.
+Update the SSID and PASS values for the Wi-Fi Settings and update the LOGGER_NAME is multiple devices are to be used. The setup assumes https to the push gateway without any authantication. However username and password for basic auth can be used by modifying the url in main.cpp.
+
+The following script creates the certs.h with the certificate chain and fingerprints which is needed to use https securly.
+
+```
+curl -s https://raw.githubusercontent.com/esp8266/Arduino/master/tools/cert.py | python3 - -s pushgateway.example.org -n pushgateway > include/certs.h
+```
 
 To build run "pio run", which looks like:
 ```
@@ -149,29 +158,31 @@ bpp�$blrl
 When running information is sent to the serial port for diagnostic purposes:
 ```
 Woke up
-Connecting to: ssid .....................
-Connected with IP: 192.168.1.127
-Temperature: 17.02
-Humidity: 0.72
-POST to URL: https://pushgateway.exampl.org/metrics/job/esp8266logger
-Sending data: # TYPE esp8266logger_temperature_celsius gauge
+Connecting to: air .....................
+Connected with IP: 192.168.1.128
+Waiting for NTP time sync: .
+Current time: Fri Aug 19 04:22:36 2022
+Temperature: 26.03
+Humidity: 0.59
+URL: https://pushgateway.example.org:443/metrics/job/esp8266logger/
+Sending data: 
+# TYPE esp8266logger_temperature_celsius gauge
 # HELP Temperature in Celsius
-esp8266logger_temperature_celsius{name="01"} 17.02
+esp8266logger_temperature_celsius{name="01"} 26.03
 # TYPE esp8266logger_humidity_ratio gauge
 # HELP Humidity in percent
-esp8266logger_hum
-idity_ratio{name="01"} 0.72
+esp8266logger_humidity_ratio{name="01"} 0.59
 
 HTTP response code: 200
-received payload: 
+HTTP response headers: HTTP response payload: 
 Deep sleeping
 ```
 
 Then later you can retrieve that same data from the pushgateway with:
 ```
 $ curl -s https://pushgateway.example.org/metrics | grep ^esp8266logger
-esp8266logger_humidity_ratio{instance="",job="esp8266logger",name="01"} 0.54
-esp8266logger_temperature_celsius{instance="",job="esp8266logger",name="01"} 25.86
+esp8266logger_humidity_ratio{instance="",job="esp8266logger",name="01"} 0.59
+esp8266logger_temperature_celsius{instance="",job="esp8266logger",name="01"} 26.04
 
 ```
 
@@ -196,6 +207,20 @@ prometheus.yml
 # Grafana
 ![Grafana](grafana.jpg)
 
-https://hobbycomponents.com/development-boards/864-wemos-d1-mini-pro-esp8266-development-board
-http://www.esp8266learning.com/wemos-mini-ds18b20-temperature-sensor-example.php
-https://blog.robertelder.org/ds18b20-raspberry-pi-setup-pullup/
+# MAX6675
+I recently wanted to monitor higher temperatures, namely a BBQ while smoking. Neither DS18B20 nor AHT10 are speced for high tempture, so decided to look for a K Type Tehermocouple. I found some for a £5 each including the thermocouple, wires, board and MAX6675 which is an SPI interface.
+
+ * AZDelivery 3 x MAX6675 Temperature Sensor K Type Thermocouple compatible with Arduino and Raspberry Pi including E-Book! https://www.amazon.co.uk/gp/product/B07VKM35ZX/ £14.99
+
+I connected the board to the WeMod D1 as follows:
+
+| WeMos D1 Mini pin | MAX6675 |
+| --- | --- |
+| G   | GND |
+| 5V  | VCC |
+| D5  | SCK |
+| D6  | CS  |
+| D7  | SO  |
+
+The sensor type can be selected in the config.h via defining either USE_AHTXX or USE_MAX6675
+

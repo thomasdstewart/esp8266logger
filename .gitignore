@@ -1,3 +1,5 @@
 .venv
 .pio
+.platformio
 include/config.h
+include/certs.h
