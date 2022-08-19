@@ -36,7 +36,7 @@ const char *ssid = SSID;
 const char *pass = PASS;
 const char *pushgateway_path = "/metrics/job/esp8266logger/";
 const String url = String("https://") + pushgateway_host + ":" + pushgateway_port + pushgateway_path;
-X509List cert(cert_ISRG_Root_X1);
+X509List cert(CA);
 
 const int deepSleepTimeS = 60;
 

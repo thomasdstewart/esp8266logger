@@ -29,5 +29,7 @@ jobs:
       run: pio lib -g install 1
     - name: create sample config.h
       run: cp include/config-sample.h include/config.h
+    - name: create certs.h
+      run: curl -s https://raw.githubusercontent.com/esp8266/Arduino/master/tools/cert.py | python3 - -s github.com -n pushgateway > include/certs.h
     - name: run platformio
       run: pio run
